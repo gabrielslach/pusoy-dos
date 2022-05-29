@@ -11,7 +11,7 @@ const myCardsSlice = createSlice({
         },
         myCardsFetched(state: Card[], action: PayloadAction<Card[]>) {
             state = action.payload;
-            return state;
+            return state.map(({family, value}) => ({family, value}));
         }
     }
 });

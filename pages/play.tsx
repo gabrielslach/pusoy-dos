@@ -13,6 +13,7 @@ import { Card } from '../app/store/types';
 import { dropCards } from '../app/store/myCards.slice';
 import { temp_setDroppedCards } from '../app/store/droppedCards.slice';
 import { Player, playersFetched, setPlayerTurn } from '../app/store/players.slice';
+import useWebhook from '../app/hooks/useWebhook';
 
 function* setNextTurn(players: Player[]) {
   let i = 0;
@@ -36,21 +37,39 @@ const Play: NextPage = () => {
 
   const [selected, setSelected] = useState<Card[]>([]);
   const nextTurn = useRef<IterableIterator<string>>();
+
+  const {sendData} = useWebhook({roomID: '00000', playerID: '629119a8e7d7ff4f0c8ee699'});
   
   const addMockCards = useCallback(
     () => dispatch(myCardsFetched(
       ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'].map(value => ({value, family: 'Spade'}))
-      )), [dispatch])
+      )), [dispatch]);
+
+  const constructURI = (action: string, roomID: string, playerID: string) => `${process.env.NEXT_PUBLIC_REST_URI}/${action}/${roomID}/${playerID}`;
+  
+  const loadCards = async () => {
+    const res = await fetch(constructURI('my-room', '00000', '629119a8e7d7ff4f0c8ee699'));
+    const roomDetails = await res.json();
+    if (!roomDetails) {
+      return;
+    }
+    const { myDeck, playerTurn } = roomDetails;
+    dispatch(myCardsFetched(myDeck));
+  }
 
   const handleDropCards = (cards: Card[]) => {
-    dispatch(dropCards(cards));
-    dispatch(temp_setDroppedCards(cards));
-    setSelected([]);
+    sendData(JSON.stringify({
+      action: "DROP_CARD",
+      payload: cards
+    }))
+    // dispatch(dropCards(cards));
+    // dispatch(temp_setDroppedCards(cards));
+    // setSelected([]);
 
-    if (!nextTurn || !nextTurn.current) return;
-    const turnOf = nextTurn.current.next().value;
+    // if (!nextTurn || !nextTurn.current) return;
+    // const turnOf = nextTurn.current.next().value;
 
-    dispatch(setPlayerTurn(turnOf));
+    // dispatch(setPlayerTurn(turnOf));
   };
 
   const handleCardSelect = (cardID: number) => {
@@ -67,7 +86,7 @@ const Play: NextPage = () => {
 
   useEffect(()=> {
     const mockPlayers = [{name: 'drix', id:'1'}, {name: 'karl', id: '2'}, {name:'des', id: '3'}, {name: 'marcicar', id: '4'}];
-    addMockCards();
+    loadCards();
     dispatch(playersFetched(mockPlayers));
 
     nextTurn.current = setNextTurn(mockPlayers);
@@ -75,7 +94,7 @@ const Play: NextPage = () => {
     if (!nextTurn || !nextTurn.current) return;
     const turnOf = nextTurn.current.next().value;
     dispatch(setPlayerTurn(turnOf));
-  }, [addMockCards, dispatch]);
+  }, []);
 
   return (
     <>
