@@ -1,19 +1,20 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { NextPage } from 'next'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 
 import { Avatar, Box, Button, Grid, Typography } from '@mui/material';
 import { blueGrey, green, yellow } from '@mui/material/colors';
-import MainCard from '../components/Card';
+import MainCard from '../../../components/Card';
 
 import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '../app/store';
-import { myCardsFetched } from '../app/store/myCards.slice';
-import { Card } from '../app/store/types';
-import { dropCards } from '../app/store/myCards.slice';
-import { temp_setDroppedCards } from '../app/store/droppedCards.slice';
-import { Player, playersFetched, setPlayerTurn } from '../app/store/players.slice';
-import useWebhook from '../app/hooks/useWebhook';
+import { RootState } from '../../../app/store';
+import { myCardsFetched } from '../../../app/store/myCards.slice';
+import { Card } from '../../../app/store/types';
+import { dropCards } from '../../../app/store/myCards.slice';
+import { temp_setDroppedCards } from '../../../app/store/droppedCards.slice';
+import { Player, playersFetched, setPlayerTurn } from '../../../app/store/players.slice';
+import useWebhook from '../../../app/hooks/useWebhook';
 
 function* setNextTurn(players: Player[]) {
   let i = 0;
@@ -34,11 +35,13 @@ const Play: NextPage = () => {
   const droppedCards: Card[] = useSelector((state: RootState) => state.droppedCards);
   const players: { players: Player[], playerTurn: string } = useSelector((state: RootState) => state.players);
   const dispatch = useDispatch();
+  const router = useRouter();
+  const { roomID, playerID } = router.query as { roomID: string, playerID: string};
 
   const [selected, setSelected] = useState<Card[]>([]);
   const nextTurn = useRef<IterableIterator<string>>();
 
-  const {sendData} = useWebhook({roomID: '00000', playerID: '629119a8e7d7ff4f0c8ee699'});
+  const {sendData} = useWebhook({roomID, playerID});
   
   const addMockCards = useCallback(
     () => dispatch(myCardsFetched(
@@ -48,7 +51,7 @@ const Play: NextPage = () => {
   const constructURI = (action: string, roomID: string, playerID: string) => `${process.env.NEXT_PUBLIC_REST_URI}/${action}/${roomID}/${playerID}`;
   
   const loadCards = async () => {
-    const res = await fetch(constructURI('my-room', '00000', '629119a8e7d7ff4f0c8ee699'));
+    const res = await fetch(constructURI('my-room', roomID, playerID));
     const roomDetails = await res.json();
     if (!roomDetails) {
       return;
@@ -84,7 +87,10 @@ const Play: NextPage = () => {
     return selected.findIndex(s => s.value === card.value && s.family === card.family) > -1;
   }
 
-  useEffect(()=> {
+  useEffect(() => {
+    if (!(roomID && playerID)) {
+      return;
+    }
     const mockPlayers = [{name: 'drix', id:'1'}, {name: 'karl', id: '2'}, {name:'des', id: '3'}, {name: 'marcicar', id: '4'}];
     loadCards();
     dispatch(playersFetched(mockPlayers));
@@ -94,7 +100,7 @@ const Play: NextPage = () => {
     if (!nextTurn || !nextTurn.current) return;
     const turnOf = nextTurn.current.next().value;
     dispatch(setPlayerTurn(turnOf));
-  }, []);
+  }, [roomID, playerID]);
 
   return (
     <>
