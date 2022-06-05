@@ -80,7 +80,7 @@ const Play: NextPage = () => {
       <meta name="description" content="Play Pusoy Dos by GSLACH" />
       <link rel="icon" href="/favicon.ico" />
     </Head>
-    <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingBottom: theme.spacing(6)})}>
+    <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingBottom: theme.spacing(4)})}>
       <Grid
         container
         className="app"
@@ -99,7 +99,7 @@ const Play: NextPage = () => {
           </Grid>
             {players.players.map(p => (
               <Grid item key={`player-${p.id}`}>
-                <Avatar sx={ players.playerTurn === p.id ? {backgroundColor: yellow[500], color: "black"}: {}}>{p.name}</Avatar>
+                <Avatar sx={ players.playerTurn === p.id ? {backgroundColor: yellow[500], color: "black"}: {}}>{p.name.substring(0,2)}</Avatar>
               </Grid>
             ))}
           </Grid>
@@ -123,49 +123,52 @@ const Play: NextPage = () => {
         </Grid>
       </Grid>
     </Box>
-      {/* Button Controls */}
-      <Grid
-        container
-        className="app"
-        direction="column"
-        spacing={2}
-        sx={{backgroundColor: blueGrey[900]}}
-      >
-        <Grid item>
-          <Grid container direction="row" spacing={2} padding={2}>
-            <Grid item xs={8}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={()=>handleDropCards(selected)}
-                fullWidth
-                >
-                Drop Cards
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Button variant="contained" color="secondary" fullWidth>
-                Pass
-              </Button>
-            </Grid>
+    {/* Button Controls */}
+    <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingTop: 0, paddingBottom: theme.spacing(3)})}>
+      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { playerID.substring(0,4) }</Typography>
+    </Box>
+    <Grid
+      container
+      className="app"
+      direction="column"
+      spacing={2}
+      sx={{backgroundColor: blueGrey[900]}}
+    >
+      <Grid item>
+        <Grid container direction="row" spacing={2} padding={2} paddingTop={2} >
+          <Grid item xs={8}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={()=>handleDropCards(selected)}
+              fullWidth
+              >
+              Drop Cards
+            </Button>
           </Grid>
-        </Grid>
-        {/* Player Cards */}
-        <Grid item>
-          <Grid container direction="row" spacing={2} justifyContent="center" sx={theme => ({padding: theme.spacing(1)})}>
-            {myCards.map((card, idx) => (
-              <Grid item key={`player-deck-${idx}`}>
-                <MainCard
-                  number={card.value}
-                  family={card.family}
-                  isSelected={isSelected(card)}
-                  onClick={() => handleCardSelect(idx)}
-                  />
-            </Grid>
-            ))}
+          <Grid item xs={4}>
+            <Button variant="contained" color="secondary" fullWidth>
+              Pass
+            </Button>
           </Grid>
         </Grid>
       </Grid>
+      {/* Player Cards */}
+      <Grid item>
+        <Grid container direction="row" spacing={2} justifyContent="center" sx={theme => ({padding: theme.spacing(1)})}>
+          {myCards.map((card, idx) => (
+            <Grid item key={`player-deck-${idx}`}>
+              <MainCard
+                number={card.value}
+                family={card.family}
+                isSelected={isSelected(card)}
+                onClick={() => handleCardSelect(idx)}
+                />
+          </Grid>
+          ))}
+        </Grid>
+      </Grid>
+    </Grid>
     </>
   );
 }
