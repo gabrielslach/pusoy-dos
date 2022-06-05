@@ -2,6 +2,7 @@ import React, {useEffect, useRef} from 'react';
 import { useDispatch } from 'react-redux';
 import { temp_setDroppedCards } from '../store/droppedCards.slice';
 import { myCardsFetched } from '../store/myCards.slice';
+import { setPlayerTurn } from '../store/players.slice';
 
 type useWebhookParams = {
     roomID: string,
@@ -48,20 +49,18 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
                 if (error) {
                     return;
                 }
-                //dispatch dropped cards
                 dispatch(temp_setDroppedCards(droppedCards));
-                //disptch next turn
+                dispatch(setPlayerTurn(nextPlayerIndex));
                 break;
 
             case 'DECK_UPDATE':
                 const { myDeck } = data;
-                //dispatch my cards
                 dispatch(myCardsFetched(myDeck));
                 break;
 
             case 'PLAYERS_INFO':
-                const { players } = data;
-                //dispatch players info
+                const { playersOnline } = data;
+                console.log(playersOnline);
                 break;
         
             default:

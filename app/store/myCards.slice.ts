@@ -1,18 +1,53 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Card } from "./types";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { Card, CardState, FetchRoomResponse } from "./types";
+import constructURI from "../../app/utils/constructURI";
+
+export const fetchRoom = createAsyncThunk(
+    'myCards/fetchRoom',
+    async (payload: {roomID: string, playerID: string}, { rejectWithValue }) => {
+        try {
+            const res = await fetch(constructURI('my-room', payload.roomID, payload.playerID));
+            const roomDetails: FetchRoomResponse = await res.json();
+            if (!roomDetails) {
+                return rejectWithValue('No payload');
+            }
+            
+            return roomDetails;
+        } catch (err: any) {
+            return rejectWithValue(err.response.data)
+        }
+    }
+)
 
 const myCardsSlice = createSlice({
     name: 'myCards',
-    initialState: [] as Card[],
+    initialState: {
+        cards: [],
+        loading: 'idle',
+        error: null
+    } as CardState,
     reducers: {
-        dropCards(state: Card[], action: PayloadAction<Card[]>) {
+        dropCards(state: CardState, action: PayloadAction<Card[]>) {
             const pickedCards = action.payload;
-            return state.filter(card => !pickedCards.find(p => p.family === card.family && p.value === card.value));
+            state.cards = state.cards.filter(card => !pickedCards.find(p => p.family === card.family && p.value === card.value));
+
+            return state;
         },
-        myCardsFetched(state: Card[], action: PayloadAction<Card[]>) {
-            state = action.payload;
-            return state.map(({family, value}) => ({family, value}));
+        myCardsFetched(state: CardState, action: PayloadAction<Card[]>) {
+            state.cards = action.payload.map(
+                ({family, value}) => ({family, value})
+                );
+
+            return state;
         }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchRoom.fulfilled, (state, action) => {
+                const { myDeck, playerTurn } = action.payload;
+                state.cards = myDeck;
+                return state;
+            })
     }
 });
 

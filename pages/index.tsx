@@ -1,12 +1,37 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
+import Link from 'next/link'
+import useRoom from '../app/hooks/useRoom'
 
 import { Button, Container, Grid, TextField } from '@mui/material'
+import React, { useState } from 'react'
 
 const Home: NextPage = () => {
+  const { createRoom } = useRoom();
+
+  const [roomIDField, setRoomIDField] = useState('');
+
+  const handleCreateRoom = async () => {
+    const { roomID } = await createRoom();
+    window.open(`/join-room/${roomID}`, "_self");
+  }
+
+  const handleJoinRoom = (e: React.ChangeEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    window.open(`/join-room/${roomIDField}`, "_self");
+  }
+
+  const handleChangeRoomIDField = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e || !e.target) {
+      return;
+    }
+    const target = e.target;
+    setRoomIDField(target.value);
+  }
+
   return (
     <Container>
+      <form onSubmit={handleJoinRoom}>
       <Grid
         container
         alignItems="stretch"
@@ -24,18 +49,19 @@ const Home: NextPage = () => {
           <h2>Play Pusoy Dos!</h2>
         </Grid>
         <Grid item>
-          <Button variant="contained" fullWidth >Create a room</Button>
+          <Button variant="contained" fullWidth onClick={handleCreateRoom} >Create a room</Button>
         </Grid>
         <Grid item>
           <p>or</p>
         </Grid>
         <Grid item>
-          <TextField fullWidth variant="filled" />
+          <TextField variant="outlined" fullWidth placeholder="Enter Room ID" value={roomIDField} onChange={handleChangeRoomIDField} ></TextField>
         </Grid>
         <Grid item>
-          <Button variant="contained" fullWidth >Join room</Button>
+            <Button variant="contained" fullWidth type="submit" >Join room</Button>
         </Grid>
       </Grid>
+      </form>
     </Container>
   )
 }

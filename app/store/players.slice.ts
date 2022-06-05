@@ -1,18 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface Player {
-    name: string,
-    id: string
-}
+import { Player } from "./types";
 
 const playersSlice = createSlice({
     name: 'players',
     initialState: {
         players: [] as Player[],
-        playerTurn: '1'
+        playerTurn: 0
     },
     reducers: {
-        setPlayerTurn(state: any, action: PayloadAction<string>) {
+        setPlayerTurn(state: any, action: PayloadAction<number>) {
             state.playerTurn = action.payload;
             return state;
         },
