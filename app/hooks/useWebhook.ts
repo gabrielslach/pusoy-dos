@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { useDispatch } from 'react-redux';
 import { temp_setDroppedCards } from '../store/droppedCards.slice';
 import { myCardsFetched } from '../store/myCards.slice';
@@ -13,10 +13,14 @@ const socketFactory = (roomID: string, playerID: string) => new WebSocket(`${pro
 
 const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const socket = useRef<WebSocket>();
+    const [playersOnline, setPlayersOnline] = useState<Set<number>>(new Set());
 
     const dispatch = useDispatch();
 
     useEffect(()=> {
+        if (!(roomID && playerID)) {
+            return;
+        }
         socket.current = socketFactory(roomID, playerID);
     }, [playerID, roomID]);
 
@@ -59,8 +63,13 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
                 break;
 
             case 'PLAYERS_INFO':
-                const { playersOnline } = data;
-                console.log(playersOnline);
+                const { playersOnline: _playersOnline } = data;
+                if (typeof _playersOnline.length !== 'number') {
+                    return;
+                }
+                const _playersOnlineSet = new Set<number>();
+                _playersOnline.forEach((p: number) => _playersOnlineSet.add(p));
+                setPlayersOnline(_playersOnlineSet);
                 break;
         
             default:
@@ -80,6 +89,7 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
         sendData,
         closeSocket,
         reconnectSocket,
+        playersOnline
     }
 }
 

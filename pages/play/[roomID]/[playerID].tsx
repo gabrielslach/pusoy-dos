@@ -10,23 +10,10 @@ import MainCard from '../../../components/Card';
 import { useSelector, useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from '../../../app/store';
 import { fetchRoom } from '../../../app/store/myCards.slice';
-import { Card, Player } from '../../../app/store/types';
-import { playersFetched, setPlayerTurn } from '../../../app/store/players.slice';
+import { Card } from '../../../app/store/types';
+import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
 import useWebhook from '../../../app/hooks/useWebhook';
-
-function* setNextTurn(players: Player[]) {
-  let i = 0;
-  const playersLen = players.length;
-  while (true) {
-    yield players[i].id;
-
-    i++;
-
-    if (i === playersLen) {
-      i = 0;
-    }
-  }
-}
+import usePrevious from '../../../app/hooks/usePrevious';
 
 const Play: NextPage = () => {
   const myCards = useSelector((state: RootState) => state.myCards.cards);
@@ -37,8 +24,10 @@ const Play: NextPage = () => {
   const { roomID, playerID } = router.query as { roomID: string, playerID: string};
 
   const [selected, setSelected] = useState<Card[]>([]);
+  const [myName, setMyName] = useState('');
 
-  const { sendData } = useWebhook({roomID, playerID});
+  const { sendData, playersOnline } = useWebhook({roomID, playerID});
+  const prevPlayersOnline = usePrevious(playersOnline);
 
   const handleDropCards = (cards: Card[]) => {
     sendData(JSON.stringify({
@@ -63,7 +52,30 @@ const Play: NextPage = () => {
     const room = await dispatch(fetchRoom({roomID, playerID})).unwrap();
     dispatch(playersFetched(room.players.map((s, index) => ({name: s, id: index}))));
     dispatch(setPlayerTurn(room.playerTurn));
+    dispatch(setMyPlayerNumber(room.myPlayerNumber));
   }, [dispatch, playerID, roomID]);
+
+  useEffect(() => {
+    if (players.players.length === 4) {
+      return;
+    }
+    if (prevPlayersOnline && playersOnline.size === prevPlayersOnline.size) {
+      return;
+    }
+    if (!(roomID && playerID)) {
+      return;
+    }
+    setupRoom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playersOnline, prevPlayersOnline]);
+
+  useEffect(() => {
+    if (players.myPlayerNumber < 0) {
+      return;
+    }
+    setMyName(players.players[players.myPlayerNumber].name)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [players]);
 
   useEffect(() => {
     if (!(roomID && playerID)) {
@@ -71,7 +83,8 @@ const Play: NextPage = () => {
     }
 
     setupRoom();
-  }, [roomID, playerID, setupRoom]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomID, playerID]);
 
   return (
     <>
@@ -125,7 +138,7 @@ const Play: NextPage = () => {
     </Box>
     {/* Button Controls */}
     <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingTop: 0, paddingBottom: theme.spacing(3)})}>
-      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { playerID.substring(0,4) }</Typography>
+      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { myName }</Typography>
     </Box>
     <Grid
       container
