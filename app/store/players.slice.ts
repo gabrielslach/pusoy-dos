@@ -5,11 +5,16 @@ const playersSlice = createSlice({
     name: 'players',
     initialState: {
         players: [] as Player[],
-        playerTurn: 0
+        playerTurn: 0,
+        myPlayerNumber: -1,
     },
     reducers: {
         setPlayerTurn(state: any, action: PayloadAction<number>) {
             state.playerTurn = action.payload;
+            return state;
+        },
+        setMyPlayerNumber(state: any, action: PayloadAction<number>) {
+            state.myPlayerNumber = action.payload;
             return state;
         },
         playersFetched(state: any, action: PayloadAction<Player[]>) {
@@ -19,5 +24,5 @@ const playersSlice = createSlice({
     }
 });
 
-export const { setPlayerTurn, playersFetched } = playersSlice.actions;
+export const { setPlayerTurn, playersFetched, setMyPlayerNumber } = playersSlice.actions;
 export default playersSlice.reducer;
