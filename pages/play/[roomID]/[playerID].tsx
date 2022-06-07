@@ -14,6 +14,8 @@ import { Card } from '../../../app/store/types';
 import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
 import useWebhook from '../../../app/hooks/useWebhook';
 import usePrevious from '../../../app/hooks/usePrevious';
+import StyledBadge from '../../../components/OnlineBadge';
+import FunctionalAvatar from '../../../components/FunctionalAvatar';
 
 const Play: NextPage = () => {
   const myCards = useSelector((state: RootState) => state.myCards.cards);
@@ -112,7 +114,7 @@ const Play: NextPage = () => {
           </Grid>
             {players.players.map(p => (
               <Grid item key={`player-${p.id}`}>
-                <Avatar sx={ players.playerTurn === p.id ? {backgroundColor: yellow[500], color: "black"}: {}}>{p.name.substring(0,2)}</Avatar>
+                <FunctionalAvatar isOnline={playersOnline.has(p.id)} name={p.name} sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } />
               </Grid>
             ))}
           </Grid>
