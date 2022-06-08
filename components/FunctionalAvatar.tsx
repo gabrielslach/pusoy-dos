@@ -1,31 +1,45 @@
 import { Avatar, Badge } from '@mui/material';
 import React from 'react';
-import StyledBadge from './OnlineBadge';
+import OnlineBadge from './OnlineBadge';
 
 export type FunctionalAvatarProps = {
-    isOnline: boolean,
+    isOnline?: boolean,
     sx: Object,
-    name: string
+    name: string,
+    cardCount: number
 };
+
+const AvatarWithBadge: React.FC<FunctionalAvatarProps> = props => (
+    <Badge
+        anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+        }}
+        badgeContent={props.cardCount}
+        color="primary"
+    >
+        <Avatar sx={props.sx}>{props.name.substring(0,2)}</Avatar>
+    </Badge>
+)
 
 const FunctionalAvatar: React.FC<FunctionalAvatarProps> = props => {
     switch (props.isOnline) {
         case true:
             return (
-                <StyledBadge
+                <OnlineBadge
                     overlap="circular"
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     variant="dot"
                 >
-                    <Avatar sx={props.sx}>{props.name.substring(0,2)}</Avatar>
-                </StyledBadge>
+                    <AvatarWithBadge sx={props.sx} name={props.name} cardCount={props.cardCount} />
+                </OnlineBadge>
             )
             break;
         
         case false:
         default:
             return (
-                <Avatar sx={props.sx}>{props.name.substring(0,2)}</Avatar>
+                <AvatarWithBadge sx={props.sx} name={props.name} cardCount={props.cardCount} />
             )
             break;
     }

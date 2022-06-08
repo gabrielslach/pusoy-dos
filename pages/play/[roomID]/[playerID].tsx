@@ -114,7 +114,12 @@ const Play: NextPage = () => {
           </Grid>
             {players.players.map(p => (
               <Grid item key={`player-${p.id}`}>
-                <FunctionalAvatar isOnline={playersOnline.has(p.id)} name={p.name} sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } />
+                <FunctionalAvatar 
+                  isOnline={playersOnline.has(p.id) || p.id === players.myPlayerNumber} 
+                  name={p.name}
+                  cardCount={13}
+                  sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } 
+                />
               </Grid>
             ))}
           </Grid>

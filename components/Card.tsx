@@ -3,8 +3,13 @@ import React from "react";
 import { Card, Grid, SvgIcon, Typography } from '@mui/material';
 import { SvgIconProps } from '@mui/material/SvgIcon';
 
-// import { ReactComponent as Spades } from '../public/images/spade.svg';
 import { blue } from "@mui/material/colors";
+
+import Clubs from "../public/images/club.svg";
+import Diamonds from "../public/images/diamond.svg";
+import Hearts from "../public/images/heart.svg";
+import Spades from "../public/images/spade.svg";
+import { CardFamilies } from "../app/store/types";
 
 const Icon: React.FC<SvgIconProps> = (props) => (
   <SvgIcon {...props}>
@@ -12,7 +17,26 @@ const Icon: React.FC<SvgIconProps> = (props) => (
   </SvgIcon>
 )
 
-function MainCard(props: { number: string | number, family: string, onClick?: () => void, isSelected?: boolean}) {
+const SVG: React.FC<{family: CardFamilies}> = (props) => {
+    switch (props.family) {
+        case "Clubs":
+            return <Clubs />;
+            
+        case "Diamonds":
+            return <Diamonds style={{ color: 'red' }} />;
+            
+        case "Hearts":
+            return <Hearts style={{ color: 'red' }} />;
+            
+        case "Spades":
+            return <Spades />;
+    
+        default:
+            return null;
+    }
+}
+
+function MainCard(props: { number: string | number, family: CardFamilies, onClick?: () => void, isSelected?: boolean}) {
     return (
         <Card sx={theme => ({height: '100%', minWidth: theme.spacing(7)})}>
             <Grid
@@ -29,11 +53,17 @@ function MainCard(props: { number: string | number, family: string, onClick?: ()
                 }}
             >
                 <Grid item>
-                <Typography variant="h3" textAlign="center" sx={{userSelect: 'none'}}>{props.number}</Typography>
+                <Typography
+                    variant="h3"
+                    textAlign="center"
+                    sx={{userSelect: 'none', ...((props.family === "Diamonds" || props.family === "Hearts") && {color: "red"})}}
+                >
+                    {props.number}
+                </Typography>
                 </Grid>
                 <Grid item sx={{textAlign: "center"}}>
                 <Icon fontSize="large">
-                    {/* <Spades /> */}
+                    <SVG family={props.family} />
                 </Icon>
                 </Grid>
             </Grid>

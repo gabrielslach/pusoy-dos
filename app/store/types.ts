@@ -1,6 +1,7 @@
+export type CardFamilies = "Clubs" | "Diamonds" | "Hearts" | "Spades";
 export interface Card {
     value: number | string;
-    family: string
+    family: CardFamilies;
 }
 
 export type CardState = {
