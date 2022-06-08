@@ -28,7 +28,7 @@ const Play: NextPage = () => {
   const [selected, setSelected] = useState<Card[]>([]);
   const [myName, setMyName] = useState('');
 
-  const { sendData, playersOnline } = useWebhook({roomID, playerID});
+  const { sendData, playersOnline, playersCardsCount } = useWebhook({roomID, playerID});
   const prevPlayersOnline = usePrevious(playersOnline);
 
   const handleDropCards = (cards: Card[]) => {
@@ -112,12 +112,12 @@ const Play: NextPage = () => {
           <Grid item>
             <Typography variant="h6" color="white">Turn:</Typography>
           </Grid>
-            {players.players.map(p => (
+            {players.players.map((p) => (
               <Grid item key={`player-${p.id}`}>
                 <FunctionalAvatar 
                   isOnline={playersOnline.has(p.id) || p.id === players.myPlayerNumber} 
                   name={p.name}
-                  cardCount={13}
+                  cardCount={playersCardsCount[p.id]}
                   sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } 
                 />
               </Grid>

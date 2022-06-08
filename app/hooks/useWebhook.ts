@@ -14,6 +14,7 @@ const socketFactory = (roomID: string, playerID: string) => new WebSocket(`${pro
 const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const socket = useRef<WebSocket>();
     const [playersOnline, setPlayersOnline] = useState<Set<number>>(new Set());
+    const [playersCardsCount, setPlayersCardsCount] = useState<{[key: number]: number}>({});
 
     const dispatch = useDispatch();
 
@@ -49,12 +50,13 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
 
         switch (data.type) {
             case 'NEXT_TURN':
-                const { nextPlayerIndex, droppedCards, error } = data;
+                const { nextPlayerIndex, droppedCards, playersCardsCount, error } = data;
                 if (error) {
                     return;
                 }
                 dispatch(temp_setDroppedCards(droppedCards));
                 dispatch(setPlayerTurn(nextPlayerIndex));
+                setPlayersCardsCount(playersCardsCount);
                 break;
 
             case 'DECK_UPDATE':
@@ -89,7 +91,8 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
         sendData,
         closeSocket,
         reconnectSocket,
-        playersOnline
+        playersOnline,
+        playersCardsCount,
     }
 }
 
