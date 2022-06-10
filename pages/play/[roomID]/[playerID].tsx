@@ -38,6 +38,12 @@ const Play: NextPage = () => {
     }))
   };
 
+  const handlePass = () => {
+    sendData(JSON.stringify({
+      action: "PASS"
+    }))
+  };
+
   const handleCardSelect = (cardID: number) => {
     if (isSelected(myCards[cardID])) {
       const card = myCards[cardID];
@@ -161,13 +167,19 @@ const Play: NextPage = () => {
               variant="contained"
               color="success"
               onClick={()=>handleDropCards(selected)}
+              disabled={players.myPlayerNumber !== players.playerTurn}
               fullWidth
               >
               Drop Cards
             </Button>
           </Grid>
           <Grid item xs={4}>
-            <Button variant="contained" color="secondary" fullWidth>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={()=>handlePass()}
+              disabled={players.myPlayerNumber !== players.playerTurn}
+              fullWidth>
               Pass
             </Button>
           </Grid>
