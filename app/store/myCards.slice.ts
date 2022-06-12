@@ -45,6 +45,9 @@ const myCardsSlice = createSlice({
         builder
             .addCase(fetchRoom.fulfilled, (state, action) => {
                 const { myDeck, playerTurn } = action.payload;
+                if (!myDeck) {
+                    return state;
+                }
                 state.cards = myDeck;
                 return state;
             })

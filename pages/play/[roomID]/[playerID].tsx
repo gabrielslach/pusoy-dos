@@ -3,7 +3,7 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
-import { Avatar, Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, Grid, Typography } from '@mui/material';
 import { blueGrey, green, yellow } from '@mui/material/colors';
 import MainCard from '../../../components/Card';
 
@@ -14,8 +14,8 @@ import { Card } from '../../../app/store/types';
 import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
 import useWebhook from '../../../app/hooks/useWebhook';
 import usePrevious from '../../../app/hooks/usePrevious';
-import StyledBadge from '../../../components/OnlineBadge';
 import FunctionalAvatar from '../../../components/FunctionalAvatar';
+import { setDroppedCards } from '../../../app/store/droppedCards.slice';
 
 const Play: NextPage = () => {
   const myCards = useSelector((state: RootState) => state.myCards.cards);
@@ -44,6 +44,10 @@ const Play: NextPage = () => {
     }))
   };
 
+  const isSelected = (card: Card) => {
+    return selected.findIndex(s => s.value === card.value && s.family === card.family) > -1;
+  }
+
   const handleCardSelect = (cardID: number) => {
     if (isSelected(myCards[cardID])) {
       const card = myCards[cardID];
@@ -52,16 +56,17 @@ const Play: NextPage = () => {
     setSelected([...selected, myCards[cardID]]);
   }
 
-  const isSelected = (card: Card) => {
-    return selected.findIndex(s => s.value === card.value && s.family === card.family) > -1;
-  }
-
   const setupRoom = useCallback(async () => {
     const room = await dispatch(fetchRoom({roomID, playerID})).unwrap();
     dispatch(playersFetched(room.players.map((s, index) => ({name: s, id: index}))));
     dispatch(setPlayerTurn(room.playerTurn));
     dispatch(setMyPlayerNumber(room.myPlayerNumber));
+    dispatch(setDroppedCards(room.droppedCards));
   }, [dispatch, playerID, roomID]);
+
+  useEffect(() => {
+    setSelected([]);
+  }, [myCards]);
 
   useEffect(() => {
     if (players.players.length === 4) {

@@ -1,15 +1,26 @@
 import React, {useEffect, useRef, useState} from 'react';
 import { useDispatch } from 'react-redux';
-import { temp_setDroppedCards } from '../store/droppedCards.slice';
+import { setDroppedCards } from '../store/droppedCards.slice';
 import { myCardsFetched } from '../store/myCards.slice';
 import { setPlayerTurn } from '../store/players.slice';
 
 type useWebhookParams = {
-    roomID: string,
-    playerID: string
+    roomID: string;
+    playerID: string;
 }
 
-const socketFactory = (roomID: string, playerID: string) => new WebSocket(`${process.env.NEXT_PUBLIC_WS_URI}/play/${roomID}/${playerID}`);
+type WebSocketForHeartbeat = WebSocket & {
+    pingTimeout: NodeJS.Timer;
+}
+
+const createSocket = (roomID: string, playerID: string) => new WebSocket(`${process.env.NEXT_PUBLIC_WS_URI}/play/${roomID}/${playerID}`);
+
+function heartbeat (this: WebSocketForHeartbeat) {
+    clearTimeout(this.pingTimeout);
+    this.pingTimeout = setInterval(() => {
+        this.close();
+    }, 30000 + 1000);
+}
 
 const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const socket = useRef<WebSocket>();
@@ -19,10 +30,12 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const dispatch = useDispatch();
 
     useEffect(()=> {
-        if (!(roomID && playerID)) {
+        if (!(roomID || playerID)) {
             return;
         }
-        socket.current = socketFactory(roomID, playerID);
+        socket.current = createSocket(roomID, playerID);
+
+        return closeSocket;
     }, [playerID, roomID]);
 
     const sendData = (payload: string) => {
@@ -34,12 +47,12 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     }
 
     const reconnectSocket = () => {
-        socket.current = socketFactory(roomID, playerID);
+        socket.current = createSocket(roomID, playerID);
     }
 
-    socket.current?.addEventListener('open', (e) => {
-        console.log('opened', e);
-    });
+    socket.current?.addEventListener('open', heartbeat);
+
+    socket.current?.addEventListener('ping', heartbeat);
 
     socket.current?.addEventListener('message', (e) => {
         const data = JSON.parse(e.data);
@@ -54,7 +67,9 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
                 if (error) {
                     return;
                 }
-                dispatch(temp_setDroppedCards(droppedCards));
+                if (droppedCards.length > 0){
+                    dispatch(setDroppedCards(droppedCards));
+                }
                 dispatch(setPlayerTurn(nextPlayerIndex));
                 setPlayersCardsCount(playersCardsCount);
                 break;
@@ -79,12 +94,14 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
         }
     });
     
-    socket.current?.addEventListener('close', (e) => {
-        console.log('close: ', e);
+    socket.current?.addEventListener('close', function(this: WebSocketForHeartbeat) {
+        clearTimeout(this.pingTimeout);
+        console.log('connection closed.')
     });
     
-    socket.current?.addEventListener('error', (e) => {
-        console.log('error: ', e);
+    socket.current?.addEventListener('error', function(this: WebSocketForHeartbeat) {
+        clearTimeout(this.pingTimeout);
+        console.log('socket error.')
     });
 
     return {

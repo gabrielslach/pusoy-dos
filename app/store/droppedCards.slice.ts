@@ -5,7 +5,7 @@ const droppedCardsSlice = createSlice({
     name: 'droppedCards',
     initialState: [] as Card[],
     reducers: {
-        temp_setDroppedCards(state: Card[], action: PayloadAction<Card[]>) {
+        setDroppedCards(state: Card[], action: PayloadAction<Card[]>) {
             return action.payload;
         },
         droppedCardsFetched(state: Card[], action: PayloadAction<Card[]>) {
@@ -15,5 +15,5 @@ const droppedCardsSlice = createSlice({
     }
 });
 
-export const { temp_setDroppedCards, droppedCardsFetched } = droppedCardsSlice.actions;
+export const { setDroppedCards, droppedCardsFetched } = droppedCardsSlice.actions;
 export default droppedCardsSlice.reducer;

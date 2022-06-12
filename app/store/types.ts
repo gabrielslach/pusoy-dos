@@ -19,5 +19,6 @@ export type FetchRoomResponse = {
     myDeck: Card[];
     playerTurn: number;
     myPlayerNumber: number;
-    players: string[]
+    players: string[];
+    droppedCards: Card[];
 }

@@ -7,7 +7,7 @@ export const store = configureStore({
   reducer: {
     myCards: myCardsReducer,
     droppedCards: droppedCardsReducer,
-    players: playersReducer
+    players: playersReducer,
   }
 });
 
