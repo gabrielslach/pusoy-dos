@@ -86,6 +86,9 @@ const Play: NextPage = () => {
     if (players.myPlayerNumber < 0) {
       return;
     }
+    if (myName) {
+      return;
+    }
     setMyName(players.players[players.myPlayerNumber].name)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players]);

@@ -1,8 +1,10 @@
-import React, {useEffect, useRef, useState} from 'react';
+import { Console } from 'console';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store';
 import { setDroppedCards } from '../store/droppedCards.slice';
-import { myCardsFetched } from '../store/myCards.slice';
-import { setPlayerTurn } from '../store/players.slice';
+import { fetchRoom, myCardsFetched } from '../store/myCards.slice';
+import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../store/players.slice';
 
 type useWebhookParams = {
     roomID: string;
@@ -27,7 +29,17 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const [playersOnline, setPlayersOnline] = useState<Set<number>>(new Set());
     const [playersCardsCount, setPlayersCardsCount] = useState<{[key: number]: number}>({});
 
-    const dispatch = useDispatch();
+    const timers = useRef<{[key: string]: NodeJS.Timeout}>({});
+
+    const dispatch = useDispatch<AppDispatch>();
+
+    const setupRoom = useCallback(async () => {
+        const room = await dispatch(fetchRoom({roomID, playerID})).unwrap();
+        dispatch(playersFetched(room.players.map((s, index) => ({name: s, id: index}))));
+        dispatch(setPlayerTurn(room.playerTurn));
+        dispatch(setMyPlayerNumber(room.myPlayerNumber));
+        dispatch(setDroppedCards(room.droppedCards));
+      }, [dispatch, playerID, roomID]);
 
     useEffect(()=> {
         if (!(roomID || playerID)) {
@@ -56,6 +68,15 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
 
     socket.current?.addEventListener('message', (e) => {
         const data = JSON.parse(e.data);
+        
+        if (timers.current[data.type]) {
+            return;
+        }
+
+        timers.current[data.type] = setTimeout(() => {
+            delete timers.current[data.type];
+        }, 1000);
+        console.log('type: ', data.type);
 
         if (data && !data.type && data.type === 'ERROR') {
             return;
@@ -96,7 +117,19 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     
     socket.current?.addEventListener('close', function(this: WebSocketForHeartbeat) {
         clearTimeout(this.pingTimeout);
-        console.log('connection closed.')
+
+        if (timers.current['close']) {
+            return;
+        }
+
+        timers.current['close'] = setTimeout(() => {
+            delete timers.current['close'];
+        }, 1000);
+
+        console.log('connection closed. Reconnecting...');
+
+        reconnectSocket();
+        setupRoom();
     });
     
     socket.current?.addEventListener('error', function(this: WebSocketForHeartbeat) {
