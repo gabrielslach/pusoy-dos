@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -16,6 +16,7 @@ import useWebhook from '../../../app/hooks/useWebhook';
 import usePrevious from '../../../app/hooks/usePrevious';
 import FunctionalAvatar from '../../../components/FunctionalAvatar';
 import { setDroppedCards } from '../../../app/store/droppedCards.slice';
+import checkSelectedCardsValidity from '../../../app/utils/gameRules';
 
 const Play: NextPage = () => {
   const myCards = useSelector((state: RootState) => state.myCards.cards);
@@ -30,6 +31,14 @@ const Play: NextPage = () => {
 
   const { sendData, playersOnline, playersCardsCount } = useWebhook({roomID, playerID});
   const prevPlayersOnline = usePrevious(playersOnline);
+
+  const isMoveAllowed = useMemo(() => {
+    return checkSelectedCardsValidity(droppedCards)(selected);
+  }, [droppedCards, selected]);
+
+  const isMyTurn = useMemo(() => {
+    return players.myPlayerNumber === players.playerTurn;
+  }, [players.myPlayerNumber, players.playerTurn])
 
   const handleDropCards = (cards: Card[]) => {
     sendData(JSON.stringify({
@@ -66,7 +75,8 @@ const Play: NextPage = () => {
 
   useEffect(() => {
     setSelected([]);
-  }, [myCards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(myCards)]);
 
   useEffect(() => {
     if (players.players.length === 4) {
@@ -109,7 +119,7 @@ const Play: NextPage = () => {
       <meta name="description" content="Play Pusoy Dos by GSLACH" />
       <link rel="icon" href="/favicon.ico" />
     </Head>
-    <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingBottom: theme.spacing(4)})}>
+    <Box sx={theme => ({backgroundColor: isMyTurn ? green[900]: blueGrey[800], padding: theme.spacing(2), paddingBottom: theme.spacing(4)})}>
       <Grid
         container
         className="app"
@@ -158,8 +168,8 @@ const Play: NextPage = () => {
       </Grid>
     </Box>
     {/* Button Controls */}
-    <Box sx={theme => ({backgroundColor: green[900], padding: theme.spacing(2), paddingTop: 0, paddingBottom: theme.spacing(3)})}>
-      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { myName }</Typography>
+    <Box sx={theme => ({backgroundColor: isMyTurn ? green[900]: blueGrey[800], padding: theme.spacing(2), paddingTop: 0, paddingBottom: theme.spacing(3)})}>
+      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { myName } isMoveAllowed: { String(isMoveAllowed) }</Typography>
     </Box>
     <Grid
       container
@@ -175,7 +185,7 @@ const Play: NextPage = () => {
               variant="contained"
               color="success"
               onClick={()=>handleDropCards(selected)}
-              disabled={players.myPlayerNumber !== players.playerTurn}
+              disabled={!isMyTurn}
               fullWidth
               >
               Drop Cards
@@ -186,7 +196,7 @@ const Play: NextPage = () => {
               variant="contained"
               color="secondary"
               onClick={()=>handlePass()}
-              disabled={players.myPlayerNumber !== players.playerTurn}
+              disabled={!isMyTurn}
               fullWidth>
               Pass
             </Button>
