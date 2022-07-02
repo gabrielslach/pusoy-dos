@@ -76,7 +76,6 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
         timers.current[data.type] = setTimeout(() => {
             delete timers.current[data.type];
         }, 1000);
-        console.log('type: ', data.type);
 
         if (data && !data.type && data.type === 'ERROR') {
             return;

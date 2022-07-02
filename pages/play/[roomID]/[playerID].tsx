@@ -3,8 +3,8 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
-import { Box, Button, Grid, Typography } from '@mui/material';
-import { blueGrey, green, yellow } from '@mui/material/colors';
+import { Grid } from '@mui/material';
+import { blueGrey } from '@mui/material/colors';
 import MainCard from '../../../components/Card';
 
 import { useSelector, useDispatch } from 'react-redux'
@@ -14,9 +14,10 @@ import { Card } from '../../../app/store/types';
 import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
 import useWebhook from '../../../app/hooks/useWebhook';
 import usePrevious from '../../../app/hooks/usePrevious';
-import FunctionalAvatar from '../../../components/FunctionalAvatar';
 import { setDroppedCards } from '../../../app/store/droppedCards.slice';
 import checkSelectedCardsValidity from '../../../app/utils/gameRules';
+import TurnActionButtons from '../../../components/TurnActionButtons';
+import GameTable from '../../../components/GameTable';
 
 const Play: NextPage = () => {
   const myCards = useSelector((state: RootState) => state.myCards.cards);
@@ -26,43 +27,30 @@ const Play: NextPage = () => {
   const router = useRouter();
   const { roomID, playerID } = router.query as { roomID: string, playerID: string};
 
-  const [selected, setSelected] = useState<Card[]>([]);
+  const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [myName, setMyName] = useState('');
 
   const { sendData, playersOnline, playersCardsCount } = useWebhook({roomID, playerID});
   const prevPlayersOnline = usePrevious(playersOnline);
 
-  const isMoveAllowed = useMemo(() => {
-    return checkSelectedCardsValidity(droppedCards)(selected);
-  }, [droppedCards, selected]);
+  const isDropAllowed = useMemo(() => {
+    return checkSelectedCardsValidity(droppedCards)(selectedCards);
+  }, [droppedCards, selectedCards]);
 
   const isMyTurn = useMemo(() => {
     return players.myPlayerNumber === players.playerTurn;
   }, [players.myPlayerNumber, players.playerTurn])
 
-  const handleDropCards = (cards: Card[]) => {
-    sendData(JSON.stringify({
-      action: "DROP_CARD",
-      payload: cards
-    }))
-  };
-
-  const handlePass = () => {
-    sendData(JSON.stringify({
-      action: "PASS"
-    }))
-  };
-
   const isSelected = (card: Card) => {
-    return selected.findIndex(s => s.value === card.value && s.family === card.family) > -1;
+    return selectedCards.findIndex(s => s.value === card.value && s.family === card.family) > -1;
   }
 
   const handleCardSelect = (cardID: number) => {
     if (isSelected(myCards[cardID])) {
       const card = myCards[cardID];
-      return setSelected(selected.filter(s => s.value !== card.value || s.family !== card.family));
+      return setSelectedCards(selectedCards.filter(s => s.value !== card.value || s.family !== card.family));
     }
-    setSelected([...selected, myCards[cardID]]);
+    setSelectedCards([...selectedCards, myCards[cardID]]);
   }
 
   const setupRoom = useCallback(async () => {
@@ -74,7 +62,7 @@ const Play: NextPage = () => {
   }, [dispatch, playerID, roomID]);
 
   useEffect(() => {
-    setSelected([]);
+    setSelectedCards([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(myCards)]);
 
@@ -119,58 +107,13 @@ const Play: NextPage = () => {
       <meta name="description" content="Play Pusoy Dos by GSLACH" />
       <link rel="icon" href="/favicon.ico" />
     </Head>
-    <Box sx={theme => ({backgroundColor: isMyTurn ? green[900]: blueGrey[800], padding: theme.spacing(2), paddingBottom: theme.spacing(4)})}>
-      <Grid
-        container
-        className="app"
-        direction="column"
-        spacing={4}
-      >
-        <Grid item>
-          <Grid 
-            container 
-            direction="row" 
-            spacing={2}
-            alignItems="center"
-          >
-          <Grid item>
-            <Typography variant="h6" color="white">Turn:</Typography>
-          </Grid>
-            {players.players.map((p) => (
-              <Grid item key={`player-${p.id}`}>
-                <FunctionalAvatar 
-                  isOnline={playersOnline.has(p.id) || p.id === players.myPlayerNumber} 
-                  name={p.name}
-                  cardCount={playersCardsCount[p.id]}
-                  sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } 
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-        <Grid item>
-          <Grid
-            container
-            direction="row"
-            spacing={1}
-            alignItems="stretch"
-            justifyContent="center"
-            sx={theme => ({height: theme.spacing(16)})}
-            id="board"
-          >
-            {droppedCards.map(i => (
-            <Grid item key={`board-card-${i.value}-${i.family}`}>
-              <MainCard number={i.value} family={i.family}/>
-            </Grid>
-            ))}
-          </Grid>
-        </Grid>
-      </Grid>
-    </Box>
-    {/* Button Controls */}
-    <Box sx={theme => ({backgroundColor: isMyTurn ? green[900]: blueGrey[800], padding: theme.spacing(2), paddingTop: 0, paddingBottom: theme.spacing(3)})}>
-      <Typography variant="caption" color="white" >ROOM ID: { roomID } | PLAYER: { myName } isMoveAllowed: { String(isMoveAllowed) }</Typography>
-    </Box>
+    <GameTable
+      isMyTurn={isMyTurn}
+      playersOnline={playersOnline}
+      playersCardsCount={playersCardsCount}
+      roomID={roomID}
+      myName={myName}
+      />
     <Grid
       container
       className="app"
@@ -179,29 +122,12 @@ const Play: NextPage = () => {
       sx={{backgroundColor: blueGrey[900]}}
     >
       <Grid item>
-        <Grid container direction="row" spacing={2} padding={2} paddingTop={2} >
-          <Grid item xs={8}>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={()=>handleDropCards(selected)}
-              disabled={!isMyTurn}
-              fullWidth
-              >
-              Drop Cards
-            </Button>
-          </Grid>
-          <Grid item xs={4}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={()=>handlePass()}
-              disabled={!isMyTurn}
-              fullWidth>
-              Pass
-            </Button>
-          </Grid>
-        </Grid>
+        <TurnActionButtons
+          sendData={sendData}
+          isMyTurn={isMyTurn}
+          isDropAllowed={isDropAllowed}
+          selectedCards={selectedCards}
+          />
       </Grid>
       {/* Player Cards */}
       <Grid item>
