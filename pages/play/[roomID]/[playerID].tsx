@@ -10,9 +10,9 @@ import MainCard from '../../../components/Card';
 import { useSelector, useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from '../../../app/store';
 import { fetchRoom } from '../../../app/store/myCards.slice';
-import { Card } from '../../../app/store/types';
-import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
-import useWebhook from '../../../app/hooks/useWebhook';
+import { Card, FetchRoomResponse } from '../../../app/store/types';
+import { playersFetched, setLastDropBy, setMyPlayerNumber, setPlayerTurn } from '../../../app/store/players.slice';
+import useWebSocket from '../../../app/hooks/useWebSocket';
 import usePrevious from '../../../app/hooks/usePrevious';
 import { setDroppedCards } from '../../../app/store/droppedCards.slice';
 import checkSelectedCardsValidity from '../../../app/utils/gameRules';
@@ -30,12 +30,13 @@ const Play: NextPage = () => {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [myName, setMyName] = useState('');
 
-  const { sendData, playersOnline, playersCardsCount } = useWebhook({roomID, playerID});
+  const { sendData, playersOnline, playersCardsCount } = useWebSocket({roomID, playerID});
   const prevPlayersOnline = usePrevious(playersOnline);
 
   const isDropAllowed = useMemo(() => {
-    return checkSelectedCardsValidity(droppedCards)(selectedCards);
-  }, [droppedCards, selectedCards]);
+    const isFreeTurn = players.lastDropBy === players.myPlayerNumber;
+    return checkSelectedCardsValidity(isFreeTurn ? selectedCards : droppedCards, isFreeTurn)(selectedCards);
+  }, [droppedCards, selectedCards, players.lastDropBy, players.myPlayerNumber]);
 
   const isMyTurn = useMemo(() => {
     return players.myPlayerNumber === players.playerTurn;
@@ -54,11 +55,12 @@ const Play: NextPage = () => {
   }
 
   const setupRoom = useCallback(async () => {
-    const room = await dispatch(fetchRoom({roomID, playerID})).unwrap();
+    const room: FetchRoomResponse = await dispatch(fetchRoom({roomID, playerID})).unwrap();
     dispatch(playersFetched(room.players.map((s, index) => ({name: s, id: index}))));
     dispatch(setPlayerTurn(room.playerTurn));
     dispatch(setMyPlayerNumber(room.myPlayerNumber));
     dispatch(setDroppedCards(room.droppedCards));
+    dispatch(setLastDropBy(room.lastDropBy));
   }, [dispatch, playerID, roomID]);
 
   useEffect(() => {

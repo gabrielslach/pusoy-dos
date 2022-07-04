@@ -28,7 +28,7 @@ const TurnActionButtons = (props: TurnActionButtonsProps) => {
                 variant="contained"
                 color="success"
                 onClick={()=>handleDropCards(props.selectedCards)}
-                disabled={!props.isMyTurn}
+                disabled={!props.isMyTurn || !props.isDropAllowed}
                 fullWidth
                 >
                 Drop Cards
@@ -44,7 +44,6 @@ const TurnActionButtons = (props: TurnActionButtonsProps) => {
                 Pass
             </Button>
             </Grid>
-            { String(props.isDropAllowed) }
         </Grid>
     )
 }

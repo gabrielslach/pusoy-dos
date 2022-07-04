@@ -4,9 +4,10 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store';
 import { setDroppedCards } from '../store/droppedCards.slice';
 import { fetchRoom, myCardsFetched } from '../store/myCards.slice';
-import { playersFetched, setMyPlayerNumber, setPlayerTurn } from '../store/players.slice';
+import { playersFetched, setLastDropBy, setMyPlayerNumber, setPlayerTurn } from '../store/players.slice';
+import { FetchRoomResponse } from '../store/types';
 
-type useWebhookParams = {
+type useWebSocketParams = {
     roomID: string;
     playerID: string;
 }
@@ -24,7 +25,7 @@ function heartbeat (this: WebSocketForHeartbeat) {
     }, 30000 + 1000);
 }
 
-const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
+const useWebSocket = ({ roomID, playerID }: useWebSocketParams) => {
     const socket = useRef<WebSocket>();
     const [playersOnline, setPlayersOnline] = useState<Set<number>>(new Set());
     const [playersCardsCount, setPlayersCardsCount] = useState<{[key: number]: number}>({});
@@ -34,11 +35,13 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     const dispatch = useDispatch<AppDispatch>();
 
     const setupRoom = useCallback(async () => {
-        const room = await dispatch(fetchRoom({roomID, playerID})).unwrap();
+        const room: FetchRoomResponse = await dispatch(fetchRoom({roomID, playerID})).unwrap();
         dispatch(playersFetched(room.players.map((s, index) => ({name: s, id: index}))));
         dispatch(setPlayerTurn(room.playerTurn));
         dispatch(setMyPlayerNumber(room.myPlayerNumber));
         dispatch(setDroppedCards(room.droppedCards));
+        dispatch(setLastDropBy(room.lastDropBy));
+        setPlayersCardsCount(room.playersCardsCount);
       }, [dispatch, playerID, roomID]);
 
     useEffect(()=> {
@@ -83,7 +86,7 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
 
         switch (data.type) {
             case 'NEXT_TURN':
-                const { nextPlayerIndex, droppedCards, playersCardsCount, error } = data;
+                const { nextPlayerIndex, droppedCards, playersCardsCount, lastDropBy, error } = data;
                 if (error) {
                     return;
                 }
@@ -91,6 +94,7 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
                     dispatch(setDroppedCards(droppedCards));
                 }
                 dispatch(setPlayerTurn(nextPlayerIndex));
+                dispatch(setLastDropBy(lastDropBy));
                 setPlayersCardsCount(playersCardsCount);
                 break;
 
@@ -145,4 +149,4 @@ const useWebhook = ({ roomID, playerID }: useWebhookParams) => {
     }
 }
 
-export default useWebhook;
+export default useWebSocket;

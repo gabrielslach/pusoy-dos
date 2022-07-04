@@ -6,6 +6,7 @@ const playersSlice = createSlice({
     initialState: {
         players: [] as Player[],
         playerTurn: 0,
+        lastDropBy: 0,
         myPlayerNumber: -1,
     },
     reducers: {
@@ -17,6 +18,10 @@ const playersSlice = createSlice({
             state.myPlayerNumber = action.payload;
             return state;
         },
+        setLastDropBy(state: any, action: PayloadAction<number>) {
+            state.lastDropBy = action.payload;
+            return state;
+        },
         playersFetched(state: any, action: PayloadAction<Player[]>) {
             state.players = action.payload;
             return state;
@@ -24,5 +29,5 @@ const playersSlice = createSlice({
     }
 });
 
-export const { setPlayerTurn, playersFetched, setMyPlayerNumber } = playersSlice.actions;
+export const { setPlayerTurn, playersFetched, setMyPlayerNumber, setLastDropBy } = playersSlice.actions;
 export default playersSlice.reducer;

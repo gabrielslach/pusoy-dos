@@ -21,4 +21,6 @@ export type FetchRoomResponse = {
     myPlayerNumber: number;
     players: string[];
     droppedCards: Card[];
+    lastDropBy: number;
+    playersCardsCount: {[key: number]: number};
 }

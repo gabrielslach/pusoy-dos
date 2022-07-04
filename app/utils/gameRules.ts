@@ -7,6 +7,15 @@ enum familyEnum {
     'Diamonds',
 }
 
+enum fiveCardsCombinationEnum {
+    'invalid',
+    'straight',
+    'flush',
+    'fullhouse',
+    'quadra',
+    'straight_flush'
+}
+
 type combinationValidatorCB = (selectedCards: Card[]) => boolean;
 
 const valuesEnum: {[key: number | string]: number} = {
@@ -161,13 +170,75 @@ const isQuadra = (cards: Card[]) => {
 
 const isStraightFlush = (cards: Card[]) => isFlush(cards) && isStraight(cards);
 
-const checkSelectedCardsValidity = (droppedCards: Card[]): combinationValidatorCB => {
-    switch (droppedCards.length) {
+const classifyCardsCombination = (pipeline: combinationValidatorCB[]) => (cards: Card[]): fiveCardsCombinationEnum => {
+    let rank = -1;
+    for (let i = 0; i < pipeline.length; i++) {
+        if (!cards || cards.length < 1) {
+            break;
+        }
+        if (pipeline[i]) {
+            rank = i;
+            break;
+        }
+    }
+
+    return rank + 1;
+}
+
+const validateFiveCards = (droppedCards: Card[], isFreeTurn: boolean) => (selectedCards: Card[]) => {
+    if (!selectedCards || !hasLength(5)(selectedCards)) {
+        return false;
+    }
+
+    const classificationPipe = [isStraight, isFlush, isFullHouse, isQuadra, isStraightFlush];
+    const droppedCardsRank = classifyCardsCombination(classificationPipe)(droppedCards);
+    const selectedCardsRank = classifyCardsCombination(classificationPipe)(selectedCards);
+
+    if (selectedCardsRank === fiveCardsCombinationEnum.invalid) {
+        return false;
+    }
+
+    if (isFreeTurn) {
+        return true;
+    }
+
+    if (selectedCardsRank < droppedCardsRank) {
+        return false;
+    }
+
+    if (selectedCardsRank > droppedCardsRank) {
+        return true;
+    }
+
+    let _dropped, _selected;
+    switch (selectedCardsRank) {
+        case fiveCardsCombinationEnum.fullhouse:
+            _dropped = getPartWith(3)(splitCardsByValue(droppedCards));
+            _selected = getPartWith(3)(splitCardsByValue(selectedCards));
+            break;
+                
+        case fiveCardsCombinationEnum.quadra:
+            _dropped = getPartWith(4)(splitCardsByValue(droppedCards));
+            _selected = getPartWith(4)(splitCardsByValue(selectedCards));
+            break;
+    
+        default:
+            _dropped = droppedCards;
+            _selected = selectedCards;
+            break;
+    }
+
+    return areSelectedCardsHigher(_dropped, _selected);
+}
+
+const checkSelectedCardsValidity = (droppedCards: Card[], isFreeTurn: boolean): combinationValidatorCB => {
+    let droppedCardsCount = droppedCards.length;
+    switch (droppedCardsCount) {
         case 1:
             return (selectedCards) => {
                 return (
                     hasLength(1)(selectedCards) && 
-                    areSelectedCardsHigher(droppedCards, selectedCards)
+                    (isFreeTurn || areSelectedCardsHigher(droppedCards, selectedCards))
                     );
             }
             
@@ -176,7 +247,7 @@ const checkSelectedCardsValidity = (droppedCards: Card[]): combinationValidatorC
                 return (
                     hasLength(2)(selectedCards) &&
                     areIdenticalValues(selectedCards) &&
-                    areSelectedCardsHigher(droppedCards, selectedCards)
+                    (isFreeTurn || areSelectedCardsHigher(droppedCards, selectedCards))
                     );
             }
             
@@ -185,54 +256,12 @@ const checkSelectedCardsValidity = (droppedCards: Card[]): combinationValidatorC
                 return (
                     hasLength(3)(selectedCards) &&
                     areIdenticalValues(selectedCards) &&
-                    areSelectedCardsHigher(droppedCards, selectedCards)
+                    (isFreeTurn || areSelectedCardsHigher(droppedCards, selectedCards))
                     );
             }
             
         case 5:
-            if (isStraight(droppedCards)) return (selectedCards) => {
-                return (
-                    hasLength(5)(selectedCards) &&
-                    isStraight(selectedCards) &&
-                    areSelectedCardsHigher(droppedCards, selectedCards)
-                    );
-            }
-            if (isFlush(droppedCards)) return (selectedCards) => {
-                return (
-                    hasLength(5)(selectedCards) && 
-                    isFlush(selectedCards) && 
-                    areSelectedCardsHigher(droppedCards, selectedCards)
-                    );
-            }
-            if (isFullHouse(droppedCards)) return (selectedCards) => {
-                return (
-                    hasLength(5)(selectedCards) && 
-                    isFullHouse(selectedCards) && 
-                    areSelectedCardsHigher(
-                        getPartWith(3)(splitCardsByValue(droppedCards)), 
-                        getPartWith(3)(splitCardsByValue(selectedCards))
-                        )
-                    );
-            }
-            if (isQuadra(droppedCards)) return (selectedCards) => {
-                return (
-                    hasLength(5)(selectedCards) &&
-                    isQuadra(selectedCards) &&
-                    areSelectedCardsHigher(
-                        getPartWith(4)(splitCardsByValue(droppedCards)),
-                        getPartWith(4)(splitCardsByValue(selectedCards))
-                        )
-                    );
-            }
-            if (isStraightFlush(droppedCards)) return (selectedCards) => {
-                return (
-                    hasLength(5)(selectedCards) && 
-                    isStraightFlush(selectedCards) && 
-                    areSelectedCardsHigher(droppedCards, selectedCards)
-                    );
-            }
-
-            return () => false;
+            return validateFiveCards(droppedCards, isFreeTurn);
 
         default:
             return () => false;
