@@ -176,7 +176,8 @@ const classifyCardsCombination = (pipeline: combinationValidatorCB[]) => (cards:
         if (!cards || cards.length < 1) {
             break;
         }
-        if (pipeline[i]) {
+        const classifyCombination = pipeline[i];
+        if (classifyCombination(cards)) {
             rank = i;
             break;
         }
