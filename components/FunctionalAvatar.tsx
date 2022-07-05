@@ -1,5 +1,6 @@
 import { Avatar, Badge } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
+import usePrevious from '../app/hooks/usePrevious';
 import OnlineBadge from './OnlineBadge';
 
 export type FunctionalAvatarProps = {
@@ -11,15 +12,21 @@ export type FunctionalAvatarProps = {
 
 const AvatarWithBadge: React.FC<FunctionalAvatarProps> = props => {
     const [isNew, setIsNew] = useState(false);
+    const prevCardCount = usePrevious(props.cardCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const cardCountFormatted = useMemo(() => `${props.cardCount || 0} ${isNew ? 'left!': ''}`, [isNew]);
+    const cardCountFormatted = useMemo(() => `${props.cardCount || '?'} ${isNew ? 'left!': ''}`, [isNew]);
 
     useEffect(() => {
+        if (prevCardCount === props.cardCount) {
+            return;
+        }
+
         setTimeout(() => {
             setIsNew(false);
         }, 2000);
 
         setIsNew(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.cardCount]);
     return (
         <Badge

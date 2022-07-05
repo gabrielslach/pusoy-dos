@@ -40,7 +40,7 @@ const GameTable = (props: GameTableProps) => {
                         <FunctionalAvatar
                         isOnline={props.playersOnline.has(p.id) || p.id === players.myPlayerNumber} 
                         name={p.name}
-                        cardCount={props.playersCardsCount[p.id]}
+                        cardCount={props.playersCardsCount && props.playersCardsCount[p.id]}
                         sx={(players.playerTurn === p.id) ? {backgroundColor: yellow[500], color: "black"}: {} } 
                         />
                     </Grid>
