@@ -39,12 +39,19 @@ const myCardsSlice = createSlice({
                 );
 
             return state;
+        },
+        swapCards(state: CardState, action: PayloadAction<{insertIndex: number, deleteIndex: number}>) {
+            const { insertIndex, deleteIndex } = action.payload;
+            const cardsToMove: Card[] = state.cards.splice(deleteIndex, 1);
+            state.cards.splice(insertIndex, 0, ...cardsToMove);
+
+            return state;
         }
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchRoom.fulfilled, (state, action) => {
-                const { myDeck, playerTurn } = action.payload;
+                const { myDeck } = action.payload;
                 if (!myDeck) {
                     return state;
                 }
@@ -54,5 +61,5 @@ const myCardsSlice = createSlice({
     }
 });
 
-export const { dropCards, myCardsFetched } = myCardsSlice.actions;
+export const { dropCards, myCardsFetched, swapCards } = myCardsSlice.actions;
 export default myCardsSlice.reducer;
