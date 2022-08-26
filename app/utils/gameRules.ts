@@ -190,7 +190,7 @@ const validateFiveCards = (droppedCards: Card[], isFreeTurn: boolean) => (select
     if (!selectedCards || !hasLength(5)(selectedCards)) {
         return false;
     }
-console.log("wew")
+window.alert("wew")
     const classificationPipe = [isStraight, isFlush, isFullHouse, isQuadra, isStraightFlush];
     const droppedCardsRank = classifyCardsCombination(classificationPipe)(droppedCards);
     const selectedCardsRank = classifyCardsCombination(classificationPipe)(selectedCards);
@@ -198,7 +198,7 @@ console.log("wew")
     if (selectedCardsRank === fiveCardsCombinationEnum.invalid) {
         return false;
     }
-console.log("wew2")
+window.alert("wew2")
     if (isFreeTurn) {
         return true;
     }
@@ -206,11 +206,11 @@ console.log("wew3")
     if (selectedCardsRank < droppedCardsRank) {
         return false;
     }
-console.log("wew4")
+window.alert("wew4")
     if (selectedCardsRank > droppedCardsRank) {
         return true;
     }
-console.log("wew5")
+window.alert("wew5")
     let _dropped, _selected;
     switch (selectedCardsRank) {
         case fiveCardsCombinationEnum.fullhouse:
