@@ -96,11 +96,11 @@ const filterSameValue = (baseIndex: number) => (cards: Card[]) => {
 }
 
 const areValuesConsecutive = (cards: Card[]) => {
-    const _cards = [...cards];
-    _cards.sort((a, b) => valuesEnum[a.value] - valuesEnum[b.value]);
-    let prevValue: number = 0;
-    for (const card of _cards) {
-        if (valuesEnum[card.value] <= prevValue) {
+    const sortedCards = [...cards].sort((a, b) => valuesEnum[a.value] - valuesEnum[b.value]);
+    let prevValue: number = valuesEnum[sortedCards[0].value];
+    const sortedCardsWithoutFirst = sortedCards.slice(1);
+    for (const card of sortedCardsWithoutFirst) {
+        if (valuesEnum[card.value] - prevValue !== 1) {
             return false;
         }
         prevValue = valuesEnum[card.value];
