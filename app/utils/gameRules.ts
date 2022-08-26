@@ -157,15 +157,11 @@ const isQuadra = (cards: Card[]) => {
         return false;
     }
 
-    if (leftPart.length !== 4 && leftPart.length !== 1) {
-        return false;
+    if ([leftPart.length, rightPart.length].includes(4)) {
+        return true;
     }
 
-    if (rightPart.length !== 4 && rightPart.length !== 1) {
-        return false;
-    }
-
-    return true;
+    return false;
 };
 
 const isStraightFlush = (cards: Card[]) => isFlush(cards) && isStraight(cards);
