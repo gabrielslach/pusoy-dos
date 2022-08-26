@@ -198,11 +198,12 @@ window.alert("wew")
     if (selectedCardsRank === fiveCardsCombinationEnum.invalid) {
         return false;
     }
-window.alert("wew2")
+window.alert("2")
     if (isFreeTurn) {
         return true;
     }
 console.log("wew3")
+    window.alert(JSON.stringify({selectedCardsRank, droppedCardsRank}))
     if (selectedCardsRank < droppedCardsRank) {
         return false;
     }
