@@ -229,7 +229,7 @@ window.alert("wew5")
             _selected = selectedCards;
             break;
     }
-console.log("wew", _dropped, _selected)
+window.alert(JSON.stringify({_dropped, _selected}))
     return areSelectedCardsHigher(_dropped, _selected);
 }
 
