@@ -203,7 +203,7 @@ window.alert("2")
         return true;
     }
 console.log("wew3")
-    window.alert(JSON.stringify({selectedCardsRank, droppedCardsRank}))
+    window.alert(JSON.stringify({a:fiveCardsCombinationEnum[selectedCardsRank], b:fiveCardsCombinationEnum[droppedCardsRank]}))
     if (selectedCardsRank < droppedCardsRank) {
         return false;
     }
