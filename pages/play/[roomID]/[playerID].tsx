@@ -15,7 +15,7 @@ import { playersFetched, setLastDropBy, setMyPlayerNumber, setPlayerTurn } from 
 import useWebSocket from '../../../app/hooks/useWebSocket';
 import usePrevious from '../../../app/hooks/usePrevious';
 import { setDroppedCards } from '../../../app/store/droppedCards.slice';
-import checkSelectedCardsValidity from '../../../app/utils/gameRules';
+import checkSelectedCardsValidity, { haveThreeClubs } from '../../../app/utils/gameRules';
 import TurnActionButtons from '../../../components/TurnActionButtons';
 import GameTable from '../../../components/GameTable';
 
@@ -41,6 +41,12 @@ const Play: NextPage = () => {
 
   const isDropAllowed = useMemo(() => {
     const isFreeTurn = players.lastDropBy === players.myPlayerNumber;
+    
+    if (isFreeTurn && droppedCards.length === 0) {
+      if (!haveThreeClubs(selectedCards)) {
+        return false;
+      }
+    }
 
     if (cardDeckMode !== cardDeckModes.turn) {
       return false;

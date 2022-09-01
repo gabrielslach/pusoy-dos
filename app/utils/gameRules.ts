@@ -50,15 +50,15 @@ const getHighestCard = (cards: Card[]) => {
 }
 
 const areSelectedCardsHigher = (droppedCards: Card[], selectedCards: Card[]) => {
-    const { family: dFamily, value: dValue } = getHighestCard(droppedCards);
-    const { family: sFamily, value: sValue } = getHighestCard(selectedCards);
+    const { family: dropFamily, value: dropValue } = getHighestCard(droppedCards);
+    const { family: selectFamily, value: selectValue } = getHighestCard(selectedCards);
 
-    if (valuesEnum[sValue] < valuesEnum[dValue]) {
+    if (valuesEnum[selectValue] < valuesEnum[dropValue]) {
         return false;
     }
 
-    if (valuesEnum[sValue] === valuesEnum[dValue]) {
-        if (familyEnum[sFamily] < familyEnum[dFamily]) {
+    if (valuesEnum[selectValue] === valuesEnum[dropValue]) {
+        if (familyEnum[selectFamily] < familyEnum[dropFamily]) {
             return false;
         }
     }
@@ -186,7 +186,7 @@ const validateFiveCards = (droppedCards: Card[], isFreeTurn: boolean) => (select
     if (!selectedCards || !hasLength(5)(selectedCards)) {
         return false;
     }
-window.alert("wew")
+
     const classificationPipe = [isStraight, isFlush, isFullHouse, isQuadra, isStraightFlush];
     const droppedCardsRank = classifyCardsCombination(classificationPipe)(droppedCards);
     const selectedCardsRank = classifyCardsCombination(classificationPipe)(selectedCards);
@@ -194,20 +194,19 @@ window.alert("wew")
     if (selectedCardsRank === fiveCardsCombinationEnum.invalid) {
         return false;
     }
-window.alert("2")
+    
     if (isFreeTurn) {
         return true;
     }
-console.log("wew3")
-    window.alert(JSON.stringify({a:fiveCardsCombinationEnum[selectedCardsRank], b:fiveCardsCombinationEnum[droppedCardsRank]}))
+    
     if (selectedCardsRank < droppedCardsRank) {
         return false;
     }
-window.alert("wew4")
+    
     if (selectedCardsRank > droppedCardsRank) {
         return true;
     }
-window.alert("wew5")
+    
     let _dropped, _selected;
     switch (selectedCardsRank) {
         case fiveCardsCombinationEnum.fullhouse:
@@ -225,9 +224,12 @@ window.alert("wew5")
             _selected = selectedCards;
             break;
     }
-window.alert(JSON.stringify({_dropped, _selected}))
+
     return areSelectedCardsHigher(_dropped, _selected);
 }
+
+const isThreeClubs = (card: Card) => card.family === 'Clubs' && card.value === 3;
+export const haveThreeClubs = (cards: Card[]) => 1 === cards.filter(isThreeClubs).length;
 
 const checkSelectedCardsValidity = (droppedCards: Card[], isFreeTurn: boolean): combinationValidatorCB => {
     let droppedCardsCount = droppedCards.length;
